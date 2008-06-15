@@ -1,0 +1,103 @@
+<project name="mdb-sqlite" default="compile" basedir=".">
+
+    <!-- Output Directories -->
+    <property name="dist.dir" value="dist"/>
+    <property name="classes.dir" value="${dist.dir}/classes"/>
+    <property name="docs.dir" value="${dist.dir}/docs"/>
+
+    <!-- Source Directories -->
+    <property name="src.dir" value="src"/>
+    <property name="src.dir.java" value="${src.dir}/java"/>
+    <property name="lib.dir" value="lib"/>
+
+    <!-- Project Settings -->
+    <property name="docs.title" value="Microsoft Access MDB to SQLite Converter"/>
+
+    <!-- Jar File -->
+    <property name="jar.main" value="com.plausiblelabs.mdb.Main"/>
+    <property name="jar.manifest" value="${dist.dir}/jar.manifest"/>
+
+    <!-- Class Path -->
+    <path id="classpath">
+        <!-- SQLite -->
+        <pathelement location="${lib.dir}/sqlitejdbc-v048-nested.jar"/>
+
+        <!-- Jackcess -->
+        <pathelement location="${lib.dir}/commons-lang-2.4.jar"/>
+        <pathelement location="${lib.dir}/commons-logging-1.1.1.jar"/>
+        <pathelement location="${lib.dir}/jackcess-1.1.14.jar"/>
+
+        <!-- JUnit -->
+        <pathelement location="${lib.dir}/junit-4.4.jar"/>
+    </path>
+
+    <!-- Ant Tasks -->
+    <taskdef name="one-jar" classname="com.simontuffs.onejar.ant.OneJarTask" classpath="${lib.dir}/one-jar-ant-task-0.96.jar"/>
+
+    <!-- Targets -->
+    <target name="prepare">
+        <mkdir dir="${dist.dir}"/>
+        <mkdir dir="${classes.dir}"/>
+        <mkdir dir="${docs.dir}"/>
+    </target>
+
+    <target name="compile" depends="prepare">
+        <javac srcdir="${src.dir.java}" destdir="${classes.dir}" source="1.5" target="1.5">
+            <classpath>
+                <path refid="classpath"/>
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="dist" depends="compile">
+        <!-- Create the main jar -->
+        <manifest file="${jar.manifest}">
+            <attribute name="Main-Class" value="${jar.main}"/>
+        </manifest>
+        <jar destfile="${dist.dir}/main.jar" manifest="${jar.manifest}">
+            <fileset dir="${classes.dir}" includes="**/*.class" />
+        </jar>
+
+        <!-- Package it up into one jar -->
+        <one-jar destfile="${dist.dir}/mdb-sqlite.jar">
+            <main jar="${dist.dir}/main.jar"/>
+
+            <!-- Bring in non-modified dependencies -->
+            <lib>
+                <fileset dir="${lib.dir}" includes="**/*.jar"/>
+            </lib>
+        </one-jar>
+    </target>
+
+    <target name="test" depends="compile">
+        <junit printsummary="yes" failureproperty="tests.failure">
+            <classpath>
+                <path refid="classpath"/>
+                <pathelement location="${classes.dir}"/>
+            </classpath>
+
+            <formatter type="brief" usefile="false"/>
+
+            <!-- Run one test -->
+            <test name="${test}" if="test"/>
+
+            <!-- Run all tests -->
+            <batchtest unless="test">
+                <fileset dir="${classes.dir}">
+                    <include name="**/*Tests.class"/>
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="docs">
+    </target>
+
+    <target name="clean">
+        <delete dir="${classes.dir}"/>
+    </target>
+
+    <target name="distclean">
+        <delete dir="${dist.dir}"/>
+    </target>
+</project>
