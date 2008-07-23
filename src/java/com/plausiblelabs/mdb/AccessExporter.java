@@ -202,6 +202,21 @@ public class AccessExporter {
                         /* Store money as a string. Is there any other valid representation in SQLite? */
                         prep.setString(i + 1, row.get(column.getName()).toString());
                         break;
+                    case BOOLEAN:
+                        /* The SQLite JDBC driver does not handle boolean values */
+                        final boolean bool;
+                        final int intVal;
+
+                        /* Determine the value (1/0) */
+                        bool = (Boolean) row.get(column.getName());
+                        if (bool)
+                            intVal = 1;
+                        else
+                            intVal = 0;
+                            
+                        /* Store it */
+                        prep.setInt(i + 1, intVal);
+                        break;
                     default:
                         prep.setObject(i + 1, row.get(column.getName()));
                         break;
