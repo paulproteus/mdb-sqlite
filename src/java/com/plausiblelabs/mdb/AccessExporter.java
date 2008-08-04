@@ -40,6 +40,7 @@ import java.util.Set;
 
 import com.healthmarketscience.jackcess.Column;
 import com.healthmarketscience.jackcess.Database;
+import com.healthmarketscience.jackcess.Index;
 import com.healthmarketscience.jackcess.Table;
 
 /**
@@ -60,7 +61,56 @@ public class AccessExporter {
     private String escapeIdentifier (final String identifier) {
         return "'" + identifier.replace("'", "''") + "'";
     }
-    
+
+
+    /**
+     * Iterate over and create SQLite indeces for every index defined
+     * in the MS Access table.
+     * 
+     * @param table MS Access table
+     * @param jdbc The SQLite database JDBC connection
+     * @throws SQLException
+     */
+    private void createIndexes(final Table table, final Connection jdbc) throws SQLException {
+        final List<Index> indexes = table.getIndexes();
+
+        for (Index index : indexes) {
+            createIndex(index, jdbc);
+        }
+    }
+
+    /**
+     * Create an index in an SQLite table for the corresponding index in MS Access
+     * 
+     * @param table MS Access table
+     * @param jdbc The SQLite database JDBC connection
+     * @throws SQLException
+     */
+    private void createIndex(final Index index, final Connection jdbc) throws SQLException {
+        final List<Index.ColumnDescriptor> columns = index.getColumns();
+        final StringBuilder stmtBuilder = new StringBuilder();
+        final String uniqueString = index.isUnique() ? "UNIQUE " : "";
+
+        /* Create the statement */
+        stmtBuilder.append("CREATE "+ uniqueString + "INDEX " + escapeIdentifier(index.getName()));
+        stmtBuilder.append(" ON " + escapeIdentifier(index.getTable().getName()) + " (");
+
+        final int columnCount = columns.size();
+        for (int i = 0; i < columnCount; i++){
+            final Index.ColumnDescriptor column = columns.get(i);
+
+            stmtBuilder.append(escapeIdentifier(column.getName()));
+            stmtBuilder.append(" ");
+            if (i + 1 < columnCount)
+                stmtBuilder.append(", ");
+        }
+        stmtBuilder.append(")");
+
+        /* Execute it */
+        final Statement stmt = jdbc.createStatement();
+        stmt.execute(stmtBuilder.toString());
+    }
+
     /**
      * Create an SQLite table for the corresponding MS Access table.
      * 
@@ -146,9 +196,10 @@ public class AccessExporter {
         for (String tableName : tableNames) {
             Table table = db.getTable(tableName);
             createTable(table, jdbc);
+            createIndexes(table, jdbc);
         }
     }
-    
+
     
     private void populateTable (Table table, Connection jdbc) throws SQLException {
         final List<Column> columns = table.getColumns();
