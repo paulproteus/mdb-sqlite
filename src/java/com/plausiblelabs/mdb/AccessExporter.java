@@ -89,11 +89,14 @@ public class AccessExporter {
     private void createIndex(final Index index, final Connection jdbc) throws SQLException {
         final List<Index.ColumnDescriptor> columns = index.getColumns();
         final StringBuilder stmtBuilder = new StringBuilder();
-        final String uniqueString = index.isUnique() ? "UNIQUE " : "";
-
+        
         /* Create the statement */
-        stmtBuilder.append("CREATE "+ uniqueString + "INDEX " + escapeIdentifier(index.getName()));
-        stmtBuilder.append(" ON " + escapeIdentifier(index.getTable().getName()) + " (");
+        final String tableName = index.getTable().getName();
+        final String indexName = tableName + "_" + index.getName();
+        final String uniqueString = index.isUnique() ? "UNIQUE" : "";
+
+        stmtBuilder.append("CREATE "+ uniqueString + " INDEX " + escapeIdentifier(indexName));
+        stmtBuilder.append(" ON " + escapeIdentifier(tableName) + " (");
 
         final int columnCount = columns.size();
         for (int i = 0; i < columnCount; i++){
