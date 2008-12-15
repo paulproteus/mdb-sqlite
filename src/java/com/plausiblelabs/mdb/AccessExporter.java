@@ -42,6 +42,8 @@ import com.healthmarketscience.jackcess.Column;
 import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.Index;
 import com.healthmarketscience.jackcess.Table;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectOutputStream;
 
 /**
  * Handles export of an MS Access database to an SQLite file.
@@ -204,7 +206,7 @@ public class AccessExporter {
     }
 
     
-    private void populateTable (Table table, Connection jdbc) throws SQLException {
+    private void populateTable (Table table, Connection jdbc) throws SQLException, IOException {
         final List<Column> columns = table.getColumns();
         final StringBuilder stmtBuilder = new StringBuilder();
         final StringBuilder valueStmtBuilder = new StringBuilder();
@@ -252,6 +254,16 @@ public class AccessExporter {
 
                 /* Perform any conversions */
                 switch (column.getType()) {
+                    case BINARY:
+                    case OLE:
+                        ByteArrayOutputStream bStream = new ByteArrayOutputStream();
+                        ObjectOutputStream oStream = new ObjectOutputStream(bStream);
+                        oStream.writeObject(row.get(column.getName()));
+                        prep.setBytes(i + 1, bStream.toByteArray());
+                        break;
+                    case FLOAT:
+                        prep.setDouble(+1, (Double) row.get(column.getName()));
+                        break;
                     case MONEY:
                         /* Store money as a string. Is there any other valid representation in SQLite? */
                         prep.setString(i + 1, row.get(column.getName()).toString());
