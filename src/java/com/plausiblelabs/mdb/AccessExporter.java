@@ -262,7 +262,7 @@ public class AccessExporter {
                         prep.setBytes(i + 1, bStream.toByteArray());
                         break;
                     case FLOAT:
-                        prep.setDouble(+1, (Double) row.get(column.getName()));
+                        prep.setDouble(i+1, (Float) row.get(column.getName()));
                         break;
                     case MONEY:
                         /* Store money as a string. Is there any other valid representation in SQLite? */
