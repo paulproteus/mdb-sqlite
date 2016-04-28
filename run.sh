@@ -25,4 +25,4 @@ done
 CLASSPATH="$CLASSPATH:$DIRNAME/dist/classes"
 
 ### go!
-java  -classpath "$CLASSPATH" com.plausiblelabs.mdb.Main
+java  -classpath "$CLASSPATH" com.plausiblelabs.mdb.Main $*
