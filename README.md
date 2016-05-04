@@ -8,3 +8,4 @@
  * `ant`
 
 ## Usage
+`$ ./run.sh <access file> <sqlite file>`
